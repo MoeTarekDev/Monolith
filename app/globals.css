@@ -1,26 +1,347 @@
 @import "tailwindcss";
+@source "../components/**/*.tsx";
+@source "./**/*.tsx";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================
+   MONOLITH — Design System (Tailwind v4)
+   ============================================ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  /* Colors — Pure monochrome only */
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-grey: #090909;
+  --color-grey-light: #111111;
+  --color-grey-mid: #1a1a1a;
+  --color-grey-border: #222222;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Typography */
+  --font-serif: 'Instrument Serif', serif;
+  --font-sans: 'Satoshi', sans-serif;
+
+  /* Fluid Type Scale */
+  --font-size-fluid-hero: clamp(3rem, -2.47rem + 15.652vw, 14.0625rem);
+  --font-size-fluid-xl: clamp(2.5rem, 0.5rem + 6vw, 8rem);
+  --font-size-fluid-lg: clamp(2rem, 0.5rem + 4.5vw, 5rem);
+  --font-size-fluid-md: clamp(1.25rem, 0.5rem + 2.25vw, 2.5rem);
+  --font-size-fluid-sm: clamp(1rem, 0.8rem + 0.6vw, 1.375rem);
+
+  /* Animations */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+
+  --animate-slide-up: slide-up 0.8s var(--ease-out-expo) forwards;
+  --animate-fade-in: fade-in 0.6s ease forwards;
+  --animate-mask-reveal: mask-reveal 1s var(--ease-out-expo) forwards;
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes mask-reveal {
+    from {
+      clip-path: inset(100% 0 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes underline-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
   }
 }
 
+/* ============================================
+   Base Styles
+   ============================================ */
+
+html {
+  background-color: #000000;
+  color: #ffffff;
+  scroll-behavior: smooth;
+}
+
+/* Lenis smooth scroll */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background: #000000;
+  color: #ffffff;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection */
+::selection {
+  background: #ffffff;
+  color: #000000;
+}
+
+::-moz-selection {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* Scrollbar — minimal */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Fluid text sizes */
+.text-fluid-hero {
+  font-size: var(--font-size-fluid-hero);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.text-fluid-xl {
+  font-size: var(--font-size-fluid-xl);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.text-fluid-lg {
+  font-size: var(--font-size-fluid-lg);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.text-fluid-md {
+  font-size: var(--font-size-fluid-md);
+  line-height: 1.3;
+}
+
+.text-fluid-sm {
+  font-size: var(--font-size-fluid-sm);
+  line-height: 1.5;
+}
+
+/* Hierarchy via opacity */
+.text-primary {
+  opacity: 1;
+}
+
+.text-secondary {
+  opacity: 0.5;
+}
+
+.text-tertiary {
+  opacity: 0.3;
+}
+
+/* ============================================
+   Card & Component Styles
+   ============================================ */
+
+/* Quote card — 1px white border, sharp corners, inversion hover */
+.quote-card {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0;
+  background: #000000;
+  padding: 2rem;
+  transition: all 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  break-inside: avoid;
+  margin-bottom: 1rem;
+}
+
+.quote-card:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.quote-card:hover .text-secondary {
+  opacity: 0.5;
+}
+
+.quote-card:hover .card-arrow {
+  transform: translateX(4px);
+}
+
+/* Author poster */
+.author-poster {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.author-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.2);
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.author-poster:hover img {
+  transform: scale(1.05);
+}
+
+.author-poster .poster-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem;
+}
+
+/* ============================================
+   Animated Underline
+   ============================================ */
+
+.animated-underline {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.animated-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animated-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ============================================
+   Mix Blend Mode — difference for text over images
+   ============================================ */
+
+.blend-difference {
+  mix-blend-mode: difference;
+}
+
+/* ============================================
+   Masonry Grid (CSS columns)
+   ============================================ */
+
+.masonry-grid {
+  columns: 1;
+  column-gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .masonry-grid {
+    columns: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-grid {
+    columns: 3;
+  }
+}
+
+/* ============================================
+   Backdrop blur for overlays
+   ============================================ */
+
+.overlay-blur {
+  backdrop-filter: blur(128px);
+  -webkit-backdrop-filter: blur(128px);
+}
+
+/* ============================================
+   Navigation
+   ============================================ */
+
+.nav-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+  padding-bottom: 2rem;
+}
+
+/* ============================================
+   Page transitions
+   ============================================ */
+
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
