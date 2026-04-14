@@ -7,20 +7,20 @@
    ============================================ */
 
 @theme {
-  /* Colors — Pure monochrome only */
-  --color-black: #000000;
-  --color-white: #ffffff;
-  --color-grey: #090909;
-  --color-grey-light: #111111;
-  --color-grey-mid: #1a1a1a;
-  --color-grey-border: #222222;
+  /* Colors — Subtly hued neutrals (OKLCH) */
+  --color-black: oklch(5% 0.005 260);        /* Deepest obsidian */
+  --color-white: oklch(99% 0.002 260);      /* Paper white */
+  --color-grey: oklch(10% 0.008 260);       /* Core surface */
+  --color-grey-light: oklch(14% 0.01 260);  /* Elevated surface */
+  --color-grey-mid: oklch(18% 0.012 260);    /* Borders & UI elements */
+  --color-grey-border: oklch(24% 0.012 260); /* High-contrast borders */
 
   /* Typography */
   --font-serif: 'Instrument Serif', serif;
   --font-sans: 'Satoshi', sans-serif;
 
-  /* Fluid Type Scale */
-  --font-size-fluid-hero: clamp(3rem, -2.47rem + 15.652vw, 14.0625rem);
+  /* Fluid Type Scale — Pushing to extreme editorial scales */
+  --font-size-fluid-hero: clamp(4rem, -4rem + 25vw, 18rem);
   --font-size-fluid-xl: clamp(2.5rem, 0.5rem + 6vw, 8rem);
   --font-size-fluid-lg: clamp(2rem, 0.5rem + 4.5vw, 5rem);
   --font-size-fluid-md: clamp(1.25rem, 0.5rem + 2.25vw, 2.5rem);
@@ -70,8 +70,8 @@
    ============================================ */
 
 html {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--color-black);
+  color: var(--color-white);
   scroll-behavior: smooth;
 }
 
@@ -98,18 +98,32 @@ html.lenis, html.lenis body {
 
 body {
   font-family: var(--font-sans);
-  background: #000000;
-  color: #ffffff;
+  background: var(--color-black);
+  color: var(--color-white);
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Texture Overlay — subtle film grain */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
 /* Selection */
 ::selection {
-  background: #ffffff;
-  color: #000000;
+  background: var(--color-white);
+  color: var(--color-black);
 }
 
 ::-moz-selection {
@@ -123,7 +137,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #000000;
+  background: var(--color-black);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -197,7 +211,7 @@ body {
 .quote-card {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 0;
-  background: #000000;
+  background: var(--color-black);
   padding: 2rem;
   transition: all 500ms cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
@@ -206,9 +220,9 @@ body {
 }
 
 .quote-card:hover {
-  background: #ffffff;
-  color: #000000;
-  border-color: #ffffff;
+  background: var(--color-white);
+  color: var(--color-black);
+  border-color: var(--color-white);
 }
 
 .quote-card:hover .text-secondary {
@@ -244,7 +258,7 @@ body {
 .author-poster .poster-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+  background: linear-gradient(to top, color-mix(in oklch, var(--color-black), transparent 20%) 0%, transparent 60%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -327,7 +341,7 @@ body {
   left: 0;
   right: 0;
   z-index: 100;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+  background: linear-gradient(to bottom, color-mix(in oklch, var(--color-black), transparent 20%) 0%, transparent 100%);
   padding-bottom: 2rem;
 }
 

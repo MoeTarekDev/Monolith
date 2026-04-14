@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Instrument_Serif } from 'next/font/google';
 import LenisProvider from '@/components/providers/LenisProvider';
+import ScrollToTop from '@/components/providers/ScrollToTop';
 import Navigation from '@/components/layout/Navigation';
 import './globals.css';
 
@@ -47,6 +48,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen">
         <LenisProvider>
+          <ScrollToTop />
           <Navigation />
           <main>{children}</main>
         </LenisProvider>
