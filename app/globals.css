@@ -72,7 +72,6 @@
 html {
   background-color: var(--color-black);
   color: var(--color-white);
-  scroll-behavior: smooth;
 }
 
 /* Lenis smooth scroll */

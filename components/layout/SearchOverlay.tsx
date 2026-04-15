@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { Quote, Author } from '@/lib/data';
@@ -74,6 +75,15 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     debounceRef.current = setTimeout(() => performSearch(query), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, performSearch]);
+
+  const focusedAuthor =
+    focusedIndex?.type === 'author'
+      ? authors.find((author) => author.id === focusedIndex.id) ?? null
+      : null;
+  const focusedQuote =
+    focusedIndex?.type === 'quote'
+      ? quotes.find((quote) => quote.id === focusedIndex.id) ?? null
+      : null;
 
   return (
     <AnimatePresence>
@@ -200,23 +210,25 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                      {focusedIndex.type === 'author' ? (
                        <div className="text-center group">
                           <p className="text-[10px] uppercase tracking-[0.5em] text-white/20 mb-4 animate-fade-in">Identity Preview</p>
-                          {authors.find(a => a.id === focusedIndex.id)?.image_url && (
+                          {focusedAuthor?.image_url && (
                              <div className="relative w-32 h-32 mx-auto mb-6 rounded-none overflow-hidden grayscale contrast-125 border border-white/10 group-hover:border-white/30 transition-colors duration-500">
-                                <img 
-                                   src={authors.find(a => a.id === focusedIndex.id)?.image_url!} 
-                                   alt="Author portrait" 
-                                   className="w-full h-full object-cover"
+                                <Image
+                                   src={focusedAuthor.image_url}
+                                   alt={`${focusedAuthor.name} portrait`}
+                                   fill
+                                   sizes="128px"
+                                   className="object-cover"
                                 />
                              </div>
                           )}
-                          <h2 className="text-fluid-lg font-serif italic mb-2">{authors.find(a => a.id === focusedIndex.id)?.name}</h2>
-                          <p className="text-white/40 font-sans tracking-widest text-[10px] uppercase">{authors.find(a => a.id === focusedIndex.id)?.profession}</p>
+                          <h2 className="text-fluid-lg font-serif italic mb-2">{focusedAuthor?.name}</h2>
+                          <p className="text-white/40 font-sans tracking-widest text-[10px] uppercase">{focusedAuthor?.profession}</p>
                        </div>
                      ) : (
                        <div className="max-w-md mx-auto relative p-12 border border-white/10">
                           <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white/20 blur-xl" />
                           <p className="text-[10px] uppercase tracking-[0.5em] text-white/20 mb-8">Record Preview</p>
-                          <p className="text-fluid-sm font-serif italic leading-snug mb-8">&ldquo;{quotes.find(q => q.id === focusedIndex.id)?.text}&rdquo;</p>
+                          <p className="text-fluid-sm font-serif italic leading-snug mb-8">&ldquo;{focusedQuote?.text}&rdquo;</p>
                           <p className="text-xs font-sans tracking-widest uppercase opacity-40">— {quotes.find(q => q.id === focusedIndex.id)?.author?.name}</p>
                        </div>
                      )}
@@ -237,4 +249,3 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     </AnimatePresence>
   );
 }
-

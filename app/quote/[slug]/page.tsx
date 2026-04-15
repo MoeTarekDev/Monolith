@@ -41,13 +41,29 @@ export default async function QuotePage({ params }: QuotePageProps) {
 
   return (
     <>
+      {/* JSON-LD for Quote */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Quotation',
+            text: quote.text,
+            creator: {
+              '@type': 'Person',
+              name: authorName,
+            },
+            url: `https://monolith.quotes/quote/${quote.slug}`,
+          }),
+        }}
+      />
       {/* 1. Full-viewport quote */}
       <section className="min-h-screen flex flex-col items-center justify-center px-6 md:px-10 py-24">
         <div className="max-w-4xl text-center">
           <TextMask
             className="text-fluid-lg font-serif italic leading-tight w-full"
             delay={0.3}
-            as="p"
+            as="h1"
             centered
           >
             {quote.text}

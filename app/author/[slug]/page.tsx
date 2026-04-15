@@ -50,6 +50,23 @@ export default async function AuthorPage({ params }: AuthorPageProps) {
   return (
     <>
       <main className="min-h-screen bg-black">
+        {/* JSON-LD for Author */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Person',
+              name: author.name,
+              description: author.bio,
+              birthDate: author.born,
+              deathDate: author.died,
+              nationality: author.nationality,
+              jobTitle: author.profession,
+              url: `https://monolith.quotes/author/${author.slug}`,
+            }),
+          }}
+        />
         {/* 1. Asymmetrical Editorial Hero */}
         <section className="relative min-h-[90vh] flex flex-col md:flex-row items-stretch pt-24">
           {/* Portrait Column */}

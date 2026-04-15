@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,5 +10,5 @@ export default function ExploreLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <Suspense fallback={null}>{children}</Suspense>;
+  return children;
 }

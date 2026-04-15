@@ -3,10 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import csv from 'csv-parser';
-import request from 'request';
 import unzipper from 'unzipper';
 import { pipeline } from 'stream/promises';
-import { execSync } from 'child_process';
 
 config({ path: '.env.local' });
 
@@ -22,6 +20,32 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
+interface WikipediaSummary {
+  extract?: string;
+  originalimage?: { source?: string };
+  thumbnail?: { source?: string };
+}
+
+interface ZipEntryLike {
+  path: string;
+  stream: () => NodeJS.ReadableStream;
+}
+
+interface SeedQuote {
+  quote: string;
+  author: string;
+  category: string;
+}
+
+interface DummyJsonQuote {
+  quote: string;
+  author: string;
+}
+
+interface DummyJsonQuoteResponse {
+  quotes: DummyJsonQuote[];
+}
+
 function slugify(text: string): string {
   if (!text) return '';
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
@@ -32,7 +56,7 @@ async function fetchWikiInfo(authorName: string): Promise<{ bio: string | null; 
     const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(authorName)}`;
     const response = await fetch(url);
     if (!response.ok) return { bio: null, image_url: null };
-    const data = await response.json();
+    const data = (await response.json()) as WikipediaSummary;
     return {
       bio: data.extract || null,
       image_url: data.originalimage?.source || data.thumbnail?.source || null
@@ -75,7 +99,7 @@ async function downloadKaggleDataset(kaggleUser: string, kaggleKey: string) {
   const zipDir = await unzipper.Open.buffer(buffer);
   
   // Find the quotes csv inside the zip
-  const csvEntry = zipDir.files.find((d: any) => d.path.endsWith('.csv'));
+  const csvEntry = (zipDir.files as ZipEntryLike[]).find((entry) => entry.path.endsWith('.csv'));
   if (!csvEntry) {
     throw new Error('CSV not found inside the downloaded zip');
   }
@@ -107,7 +131,7 @@ async function seedDatabase() {
     console.error('Kaggle download failed, using fallback data:', err);
   }
 
-  let quotesData: { quote: string, author: string, category: string }[] = [];
+  let quotesData: SeedQuote[] = [];
 
   if (csvPath && fs.existsSync(csvPath)) {
     console.log('Parsing quotes...');
@@ -118,21 +142,23 @@ async function seedDatabase() {
         .on('end', resolve);
     });
   } else {
-    console.log('Using synthetic fallback data...');
-    quotesData = [
-      { quote: "Imagination is more important than knowledge.", author: "Albert Einstein", category: "imagination" },
-      { quote: "Life is what happens when you're busy making other plans.", author: "John Lennon", category: "life" },
-      { quote: "The only limit to our realization of tomorrow will be our doubts of today.", author: "Franklin D. Roosevelt", category: "motivation" },
-      { quote: "Do not wait to strike till the iron is hot; but make it hot by striking.", author: "William Butler Yeats", category: "hustle" },
-      { quote: "I can resist everything except temptation.", author: "Oscar Wilde", category: "humor" },
-      { quote: "In the end, it's not the years in your life that count. It's the life in your years.", author: "Abraham Lincoln", category: "life" },
-      { quote: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill", category: "success" },
-      { quote: "You must be the change you wish to see in the world.", author: "Mahatma Gandhi", category: "philosophy" }
-    ];
+    console.log('Using DummyJSON public dataset as fallback...');
+    try {
+      const response = await fetch('https://dummyjson.com/quotes?limit=0');
+      const data = (await response.json()) as DummyJsonQuoteResponse;
+      quotesData = data.quotes.map((quote) => ({
+        quote: quote.quote,
+        author: quote.author,
+        category: 'inspiration' // DummyJSON doesn't provide categories
+      }));
+      console.log(`Fetched ${quotesData.length} quotes from fallback API.`);
+    } catch (e) {
+      console.error('Fallback API failed, no quotes to seed.');
+    }
   }
 
   // Aggregate by author
-  const authorMap = new Map<string, any[]>();
+  const authorMap = new Map<string, SeedQuote[]>();
   for (const q of quotesData) {
     if (!q.author || !q.quote) continue;
     const author = q.author.trim();
@@ -142,7 +168,7 @@ async function seedDatabase() {
 
   const sortedAuthors = Array.from(authorMap.entries())
     .sort((a, b) => b[1].length - a[1].length)
-    .slice(0, 300); // Top 300 authors
+    .slice(0, 1000); // Top 1000 authors
 
   console.log(`Processing top ${sortedAuthors.length} authors...`);
 
@@ -162,7 +188,7 @@ async function seedDatabase() {
         slug: slug,
         bio: wiki.bio,
         image_url: wiki.image_url,
-        quote_count: Math.min(authorQuotes.length, 15),
+        quote_count: Math.min(authorQuotes.length, 50),
         is_featured: authorQuotes.length > 50
       }, { onConflict: 'slug' }).select('id').single();
 
@@ -172,11 +198,11 @@ async function seedDatabase() {
       }
       authorId = newAuthor?.id;
     } else {
-        if(existingAuthor && existingAuthor.quote_count >= 15) continue; // Skip if we already seeded quotes for this author
+        if(existingAuthor && existingAuthor.quote_count >= 50) continue; // Skip if we already seeded quotes for this author
     }
 
-    // Insert top 15 quotes for this author
-    const topQuotes = authorQuotes.slice(0, 15);
+    // Insert top 50 quotes for this author
+    const topQuotes = authorQuotes.slice(0, 50);
     for (const q of topQuotes) {
       const qSlug = slugify(q.quote.slice(0, 50));
       await supabase.from('quotes').upsert({

@@ -40,6 +40,17 @@ export interface Collection {
   created_at: string;
 }
 
+export type ExploreSort = 'popular' | 'newest' | 'az';
+
+export interface AuthorCardData {
+  slug: string;
+  name: string;
+  image_url: string | null;
+  quote_count: number;
+}
+
+export const EXPLORE_QUOTES_PAGE_SIZE = 18;
+
 /* ============================================
    Author Queries
    ============================================ */
@@ -56,6 +67,28 @@ export async function getAllAuthors(limit = 300): Promise<Author[]> {
     return [];
   }
   return data || [];
+}
+
+export async function getExploreAuthors(sortBy: ExploreSort = 'popular'): Promise<AuthorCardData[]> {
+  let query = supabase
+    .from('authors')
+    .select('slug, name, image_url, quote_count');
+
+  if (sortBy === 'az') {
+    query = query.order('name', { ascending: true });
+  } else {
+    // "Newest" stays visible in the UI for now and intentionally mirrors popular ordering.
+    query = query.order('quote_count', { ascending: false });
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching explore authors:', error);
+    return [];
+  }
+
+  return (data || []) as AuthorCardData[];
 }
 
 export async function getFeaturedAuthors(limit = 10): Promise<Author[]> {
@@ -114,6 +147,53 @@ export async function getAllQuotes(limit = 100, offset = 0): Promise<Quote[]> {
     console.error('Error fetching quotes:', error);
     return [];
   }
+  return data || [];
+}
+
+interface ExploreQuotesOptions {
+  category?: string | null;
+  sortBy?: ExploreSort;
+  limit?: number;
+  offset?: number;
+  throwOnError?: boolean;
+}
+
+export async function getExploreQuotesPage({
+  category = null,
+  sortBy = 'popular',
+  limit = EXPLORE_QUOTES_PAGE_SIZE,
+  offset = 0,
+  throwOnError = false,
+}: ExploreQuotesOptions = {}): Promise<Quote[]> {
+  let query = supabase
+    .from('quotes')
+    .select('*, author:authors(*)');
+
+  if (category) {
+    query = query.eq('category', category);
+  }
+
+  if (sortBy === 'newest') {
+    query = query.order('created_at', { ascending: false });
+  } else if (sortBy === 'az') {
+    query = query.order('text', { ascending: true });
+  } else {
+    query = query
+      .order('is_featured', { ascending: false })
+      .order('created_at', { ascending: false });
+  }
+
+  const { data, error } = await query.range(offset, offset + limit - 1);
+
+  if (error) {
+    if (throwOnError) {
+      throw error;
+    }
+
+    console.error('Error fetching explore quotes:', error);
+    return [];
+  }
+
   return data || [];
 }
 
